@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神秘塔罗指引 - 全牌阵逆位深层版</title>
+    <style>
+        /* --- 基础样式 --- */
+        :root {
+            --bg-color: #1a0b2e;
+            --card-back: #2d1b4e;
+            --accent: #d4af37; /* 金色 */
+            --accent-rev: #ff6b6b; /* 逆位红色 */
+            --text-color: #e0d8f0;
+            --card-width: 160px;
+            --card-height: 280px; /* 稍微加高以容纳更多文字 */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+            max-width: 600px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .info-card h3 {
+            margin: 0 0 8px 0;
+            color: var(--accent);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .info-card p, .info-card li {
+            margin: 4px 0;
+            font-size: 0.92em;
+            line-height: 1.5;
+            color: #dcd7f0;
+        }
+
+        .suit-list {
+            padding-left: 18px;
+            margin: 8px 0 0 0;
+            color: #dcd7f0;
+        }
+
+        .stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 12px;
+            font-weight: 600;
+            color: #f0e6d2;
+        }
+
+        /* --- 按钮样式 --- */
+        button {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 50px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--accent);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+
+        /* --- 牌阵布局 --- */
+        .spread-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 40px;
+        }
+
+        .card-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: var(--card-width);
+        }
+
+        .spread-title {
+            color: #f6e7b4;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            text-align: center;
+            width: 100%;
+            opacity: 0.85;
+        }
+
+        .position-label {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* --- 卡牌视觉与动画 --- */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border-radius: 10px;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #4a3b69;
+        }
+
+        /* 牌背 */
+        .card-front {
+            background: radial-gradient(circle, #432c7a 0%, #1a0b2e 100%);
+            background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="%236a4c9c"/></svg>');
+        }
+
+        .card-front::after {
+            content: "✦";
+            font-size: 3em;
+            color: rgba(255,255,255,0.2);
+        }
+
+        /* 牌面（内容） */
+        .card-back {
+            background-color: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+            padding: 12px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, #fffdf0 0%, #f0e6d2 100%);
+            border: 4px double var(--accent);
+        }
+
+        .tarot-icon {
+            font-size: 3.5em;
+            margin-bottom: 5px;
+            transition: transform 0.5s;
+        }
+
+        /* 逆位样式：图标倒转 */
+        .is-reversed .tarot-icon {
+            transform: rotate(180deg);
+        }
+
+        .status-badge {
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .status-up {
+            background-color: #e6f4ea;
+            color: #1e7e34;
+            border: 1px solid #1e7e34;
+        }
+
+        .status-rev {
+            background-color: #fdecea;
+            color: #c0392b;
+            border: 1px solid #c0392b;
+        }
+
+        .tarot-name {
+            font-weight: bold;
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #2c1e40;
+        }
+
+        .tarot-meaning {
+            font-size: 0.85em;
+            line-height: 1.4;
+            color: #555;
+            overflow-y: auto;
+            max-height: 100px; /* 防止文字溢出 */
+        }
+
+        /* 自定义滚动条 */
+        .tarot-meaning::-webkit-scrollbar {
+            width: 4px;
+        }
+        .tarot-meaning::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        .drawn-list {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto 40px auto;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        .drawn-list h3 {
+            margin: 0 0 12px 0;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .drawn-item {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 2fr;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            gap: 10px;
+            color: #f0e6d2;
+        }
+
+        .drawn-item:last-child { border-bottom: none; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--accent);
+        }
+
+        .badge-minor { color: #a2d2ff; border-color: rgba(162,210,255,0.4); background: rgba(162,210,255,0.1); }
+        .badge-major { color: #f7c59f; border-color: rgba(247,197,159,0.4); background: rgba(247,197,159,0.08); }
+
+        .hint {
+            color: #b5accf;
+            font-size: 0.9em;
+            margin-top: 6px;
+            opacity: 0.85;
+        }
+
+        /* --- 神的旨意（特殊样式） --- */
+        .god-will-section {
+            margin-top: 20px;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            padding-top: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .god-will-section .position-label {
+            color: #ff9f43; /* 特殊颜色 */
+            border-color: #ff9f43;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .spread-container {
+                gap: 15px;
+            }
+            :root {
+                --card-width: 130px;
+                --card-height: 230px;
+            }
+            .tarot-icon {
+                font-size: 2.8em;
+            }
+            .drawn-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✦ 灵魂塔罗 · 逆位版 ✦</h1>
+    <div class="intro">
+        默念你的问题。这副牌阵包含了逆位的能量。<br>
+        如果牌面倒置，意味着能量的受阻、延迟或内在的指引。现在加入了完整的78张牌，包括小阿尔克那。
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>全牌阵组成</h3>
+            <p><span class="stat">📚 <span id="deck-size">78</span> 张</span>包含大阿尔克那与全部小阿尔克那。</p>
+            <p class="hint">抽牌时自动混合正位与逆位，洗牌后请点击牌背翻转查看。</p>
+            <ul class="suit-list">
+                <li>🔥 权杖：行动、灵感</li>
+                <li>💧 圣杯：情感、关系</li>
+                <li>⚔️ 宝剑：思维、决策</li>
+                <li>🪙 星币：物质、现实</li>
+            </ul>
+        </div>
+        <div class="info-card">
+            <h3>推荐用法</h3>
+            <p>Past / Present / Future + God's Will 牌阵，帮助梳理时间线与神圣指引。</p>
+            <p>点击「开始洗牌与占卜」后系统会随机抽取四张牌，自动展示正逆位含义。</p>
+            <p class="hint">想快速了解抽到的牌，可查看下方「抽到的卡牌总览」。</p>
+        </div>
+    </div>
+
+    <button onclick="startDivination()">开始洗牌与占卜</button>
+
+    <div class="spread-container" id="main-spread" style="display: none;">
+        <div class="spread-title">三线时空</div>
+        <div class="card-slot">
+            <div class="position-label">Past (过去)</div>
+            <div class="card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner" id="card-0"></div>
+            </div>
+        </div>
+
+        <div class="card-slot">
+            <div class="position-label">Present (现在)</div>
+            <div class="card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner" id="card-1"></div>
+            </div>
+        </div>
+
+        <div class="card-slot">
+            <div class="position-label">Future (未来)</div>
+            <div class="card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner" id="card-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="god-will-section" id="god-spread" style="display: none;">
+        <div class="spread-title">来自神性的提醒</div>
+        <div class="card-slot">
+            <div class="position-label">God's Will (神的旨意)</div>
+            <div class="card" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner" id="card-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawn-list" id="summary" style="display:none;">
+        <h3>抽到的卡牌总览</h3>
+        <div id="summary-list"></div>
+        <div class="hint">小贴士：正位关注能量的畅通流动，逆位关注阻碍、内化或阴影面。</div>
+    </div>
+
+    <script>
+        // 大阿尔克那
+        const majorArcana = [
+            { name: "0. 愚者", icon: "🎒", meaningUp: "新的开始、天真、自由、无限可能。放下恐惧，勇敢迈出第一步。", meaningRev: "鲁莽、冒险过度、不负责任、计划不周。请三思而后行。" },
+            { name: "I. 魔术师", icon: "🪄", meaningUp: "创造力、技能、意志力、显化。你拥有实现目标的所有资源。", meaningRev: "欺骗、才华被埋没、计划受阻、意志薄弱。小心被误导。" },
+            { name: "II. 女祭司", icon: "📜", meaningUp: "直觉、潜意识、神秘、内在智慧。静下心来聆听内心的声音。", meaningRev: "情绪不稳定、忽视直觉、表面肤浅、隐藏的秘密被揭露。" },
+            { name: "III. 皇后", icon: "👑", meaningUp: "丰盛、母性、自然、感官享受。充满创造力和富足的时期。", meaningRev: "依赖、创造力受阻、家庭问题、过度挥霍或自我忽视。" },
+            { name: "IV. 皇帝", icon: "🏰", meaningUp: "权威、结构、控制、父亲形象。建立秩序，运用逻辑解决问题。", meaningRev: "暴政、僵化、滥用职权、缺乏纪律。或是面对过于强势的控制。" },
+            { name: "V. 教皇", icon: "⛪", meaningUp: "传统、信仰、顺从、精神指引。遵循规范或寻求长辈建议。", meaningRev: "反叛、挑战传统、由于束缚感到窒息、错误的建议。" },
+            { name: "VI. 恋人", icon: "💞", meaningUp: "爱、和谐、关系、选择。重大抉择或美好的合作关系。", meaningRev: "不和谐、分离、错误的选择、诱惑、沟通不畅。" },
+            { name: "VII. 战车", icon: "🛞", meaningUp: "胜利、意志力、决心、自我控制。坚持信念就能战胜困难。", meaningRev: "失控、失败、缺乏方向、受到挫折。你需要重新掌握方向盘。" },
+            { name: "VIII. 力量", icon: "🦁", meaningUp: "勇气、耐心、同情心、以柔克刚。内在的力量胜过外在的暴力。", meaningRev: "自我怀疑、软弱、恐惧、失去控制。需要找回自信。" },
+            { name: "IX. 隐士", icon: "🕯️", meaningUp: "反省、独处、寻求真理。从喧嚣中撤退，独自寻找答案。", meaningRev: "孤立、寂寞、拒绝帮助、过于封闭。小心不要与世隔绝。" },
+            { name: "X. 命运之轮", icon: "🎡", meaningUp: "改变、好运、周期、转折点。顺应变化，命运正在转动。", meaningRev: "厄运、由于抗拒改变而受苦、不可控的坏事件。稍安勿躁。" },
+            { name: "XI. 正义", icon: "⚖️", meaningUp: "公平、真理、因果、法律。诚实面对自己，种瓜得瓜。", meaningRev: "不公、偏见、逃避责任、法律纠纷。由于不诚实而导致的后果。" },
+            { name: "XII. 倒吊人", icon: "🦇", meaningUp: "牺牲、新视角、等待、放手。换个角度看世界，暂时的停滞。", meaningRev: "无谓的牺牲、拖延、顽固、无法放手。你在做无用功。" },
+            { name: "XIII. 死神", icon: "💀", meaningUp: "结束、转变、重生、放手。旧事物的终结是新开始的条件。", meaningRev: "抗拒改变、停滞不前、恐惧结束。越是抓住不放，越痛苦。" },
+            { name: "XIV. 节制", icon: "🏺", meaningUp: "平衡、适度、耐心、疗愈。寻找中庸之道，保持心态平和。", meaningRev: "失衡、过度、缺乏耐心、冲突。你的生活失去了平衡。" },
+            { name: "XV. 恶魔", icon: "😈", meaningUp: "束缚、物质主义、诱惑、执念。意识到被欲望控制才能解脱。", meaningRev: "摆脱束缚、觉醒、打破锁链。你正在重获自由。" },
+            { name: "XVI. 高塔", icon: "⚡", meaningUp: "突变、混乱、启示、崩塌。虚假基础的崩塌带来解放。", meaningRev: "勉强维持、害怕改变、延迟的灾难。逃避不可避免的事实。" },
+            { name: "XVII. 星星", icon: "⭐", meaningUp: "希望、灵感、宁静、治愈。未来充满希望，保持信念。", meaningRev: "绝望、缺乏信心、感到失落。你的光芒暂时被乌云遮蔽。" },
+            { name: "XVIII. 月亮", icon: "🌙", meaningUp: "幻觉、恐惧、潜意识、不安。事情不像表面那样，小心假象。", meaningRev: "混乱解除、秘密被揭穿、恐惧消散。迷雾正在慢慢散去。" },
+            { name: "XIX. 太阳", icon: "☀️", meaningUp: "快乐、成功、活力、积极。享受当下的幸福和成就。", meaningRev: "暂时的挫折、悲观、成功被推迟。虽然有阴影，但太阳仍在。" },
+            { name: "XX. 审判", icon: "🎺", meaningUp: "复活、觉醒、召唤。一个阶段的结束，回应内心的呼唤。", meaningRev: "自我怀疑、拒绝改变、忽视召唤。你在逃避成长的机会。" },
+            { name: "XXI. 世界", icon: "🌍", meaningUp: "完成、整合、成就、完美句号。准备进入下一个层级。", meaningRev: "未完成、缺乏闭环、停滞。还需要最后一步才能圆满。" }
+        ];
+
+        // 小阿尔克那生成器：通过牌面与花色组合快速得到 56 张牌
+        const suitMeta = [
+            { name: "权杖", icon: "🔥", focus: "行动与灵感" },
+            { name: "圣杯", icon: "💧", focus: "情感与关系" },
+            { name: "宝剑", icon: "⚔️", focus: "思维与决策" },
+            { name: "星币", icon: "🪙", focus: "物质与现实" }
+        ];
+
+        const rankMeaning = {
+            "王牌": { up: "新的种子、纯粹潜能", rev: "起步迟缓、机会错过" },
+            "二": { up: "平衡、两难、初步协商", rev: "犹豫不决、迟迟不选" },
+            "三": { up: "扩张、合作、展望", rev: "计划停滞、合作受阻" },
+            "四": { up: "稳定、巩固、基础", rev: "停滞、固守、缺乏弹性" },
+            "五": { up: "冲突、挑战、学习", rev: "回避矛盾、内耗拉扯" },
+            "六": { up: "流动、分享、过渡", rev: "不平衡、失去支持" },
+            "七": { up: "坚持、洞察、评估", rev: "自我怀疑、策略失衡" },
+            "八": { up: "行动、投入、转向", rev: "停滞、犹豫、效率低" },
+            "九": { up: "成熟、守护、成果临近", rev: "疲惫、怀疑、防御过度" },
+            "十": { up: "完成、圆满、阶段收束", rev: "过载、脱节、难以收尾" },
+            "侍从": { up: "消息、学习、好奇", rev: "分心、消息延迟、兴趣转移" },
+            "骑士": { up: "行动、冒险、推进", rev: "冲动、失控、方向飘忽" },
+            "皇后": { up: "滋养、成熟、包容", rev: "过度情绪化、缺乏界限" },
+            "国王": { up: "掌控、领导、定调", rev: "固执、独断、能量封闭" }
+        };
+
+        function generateMinorArcana() {
+            const ranks = ["王牌", "二", "三", "四", "五", "六", "七", "八", "九", "十", "侍从", "骑士", "皇后", "国王"];
+            const deck = [];
+            suitMeta.forEach(suit => {
+                ranks.forEach(rank => {
+                    const base = rankMeaning[rank];
+                    deck.push({
+                        name: `${suit.name}${rank}`,
+                        icon: suit.icon,
+                        type: "minor",
+                        suit: suit.name,
+                        focus: suit.focus,
+                        meaningUp: `${base.up}，围绕${suit.focus}展开。`,
+                        meaningRev: `${base.rev}，需要重新审视${suit.focus}。`
+                    });
+                });
+            });
+            return deck;
+        }
+
+        const minorArcana = generateMinorArcana();
+        const tarotDeck = [...majorArcana, ...minorArcana];
+
+        function renderSummary(items) {
+            const list = document.getElementById('summary-list');
+            const summary = document.getElementById('summary');
+            list.innerHTML = '';
+
+            items.forEach(({ card, isReversed, meaning }) => {
+                const typeBadge = card.type === 'minor' ? '<span class="badge badge-minor">小阿尔克那</span>' : '<span class="badge badge-major">大阿尔克那</span>';
+                const statusText = isReversed ? '逆位' : '正位';
+                const suitText = card.suit ? `${card.icon} ${card.suit}` : '原型能量';
+                const item = document.createElement('div');
+                item.className = 'drawn-item';
+                item.innerHTML = `
+                    <div>${typeBadge} ${card.name}</div>
+                    <div>${suitText} · ${statusText}</div>
+                    <div>${meaning}</div>
+                `;
+                list.appendChild(item);
+            });
+
+            summary.style.display = 'block';
+        }
+
+        function updateDeckStats() {
+            const deckSize = document.getElementById('deck-size');
+            deckSize.textContent = tarotDeck.length;
+        }
+
+        function startDivination() {
+            const mainSpread = document.getElementById('main-spread');
+            const godSpread = document.getElementById('god-spread');
+            const summary = document.getElementById('summary');
+            mainSpread.style.display = 'none';
+            godSpread.style.display = 'none';
+            summary.style.display = 'none';
+
+            setTimeout(() => {
+                let deck = [...tarotDeck];
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+
+                const drawnCards = deck.slice(0, 4);
+                const summaryItems = [];
+
+                drawnCards.forEach((card, index) => {
+                    const container = document.getElementById(`card-${index}`);
+                    const isReversed = Math.random() < 0.5;
+                    const statusText = isReversed ? "【逆位】" : "【正位】";
+                    const statusClass = isReversed ? "status-rev" : "status-up";
+                    const meaningText = isReversed ? card.meaningRev : card.meaningUp;
+                    const revClass = isReversed ? "is-reversed" : "";
+
+                    container.innerHTML = `
+                        <div class="card-front"></div>
+                        <div class="card-back ${revClass}">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                            <div class="tarot-icon">${card.icon}</div>
+                            <div class="tarot-name">${card.name}</div>
+                            <hr style="width:50%; border:0; border-top:1px solid #ddd; margin: 5px 0;">
+                            <div class="tarot-meaning">${meaningText}</div>
+                        </div>
+                    `;
+                    container.parentElement.classList.remove('flipped');
+                    summaryItems.push({ card, isReversed, meaning: meaningText });
+                });
+
+                mainSpread.style.display = 'flex';
+                godSpread.style.display = 'flex';
+                renderSummary(summaryItems);
+                mainSpread.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            }, 300);
+        }
+
+        updateDeckStats();
+    </script>
+</body>
+</html>
