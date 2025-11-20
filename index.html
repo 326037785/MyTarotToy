@@ -8,8 +8,19 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body>
-  <div id="app">
-    <template v-if="ready">
+  <div id="app" v-cloak>
+    <noscript>
+      <p class="status-box error">需要启用 JavaScript 才能抽牌。</p>
+    </noscript>
+
+    <template v-if="error">
+      <div class="status-box error">
+        <p>{{ error }}</p>
+        <button @click="fetchCards">重试加载</button>
+      </div>
+    </template>
+
+    <template v-else-if="ready">
       <header class="app-header">
         <h1>灵感塔罗抽牌</h1>
         <p class="subtitle">抽一张牌，记录当下的讯息与心情。</p>
@@ -55,12 +66,13 @@
           cards: [],
           current: null,
           history: [],
-          ready: false
+          ready: false,
+          error: null
         };
       },
       methods: {
         drawCard() {
-          if (!this.cards.length) return;
+          if (!this.ready || !this.cards.length) return;
           const index = Math.floor(Math.random() * this.cards.length);
           const card = this.cards.splice(index, 1)[0];
           this.current = card;
@@ -77,6 +89,8 @@
         async fetchCards() {
           try {
             this.ready = false;
+            this.error = null;
+            this.current = null;
             const response = await fetch('cards.json');
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
@@ -86,6 +100,7 @@
             this.ready = true;
           } catch (error) {
             console.error('读取牌组失败', error);
+            this.error = '读取牌组失败，请检查网络或重试。';
           }
         }
       },

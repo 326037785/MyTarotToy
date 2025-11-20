@@ -30,6 +30,10 @@ body {
   gap: 20px;
 }
 
+[v-cloak] {
+  display: none;
+}
+
 .app-header {
   text-align: center;
 }
@@ -147,5 +151,26 @@ button.ghost {
 
 .empty,
 .loading {
+  color: var(--muted);
+}
+
+.status-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.status-box.error {
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.status-box p {
+  margin: 0;
   color: var(--muted);
 }
