@@ -1,0 +1,2 @@
+# MyTarotToy
+Just for fun.
