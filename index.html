@@ -13,99 +13,212 @@
       <p class="status-box error">需要启用 JavaScript 才能抽牌。</p>
     </noscript>
 
-    <template v-if="error">
-      <div class="status-box error">
-        <p>{{ error }}</p>
-        <button @click="fetchCards">重试加载</button>
-      </div>
-    </template>
+    <header class="app-header">
+      <h1>✦ 灵感塔罗 · 全牌阵 ✦</h1>
+      <p class="subtitle">基于 78 张全牌阵（含逆位）的 Vue 抽牌体验。</p>
+    </header>
 
-    <template v-else-if="ready">
-      <header class="app-header">
-        <h1>灵感塔罗抽牌</h1>
-        <p class="subtitle">抽一张牌，记录当下的讯息与心情。</p>
-      </header>
-
-      <section class="card-display" v-if="current">
-        <div class="card-meta">
-          <div class="card-name">{{ current.name }}</div>
-          <div class="card-element">对应元素：{{ current.element }}</div>
-        </div>
-        <p class="card-meaning">{{ current.meaningUp }}</p>
-      </section>
-
-      <section class="controls">
-        <button @click="drawCard" :disabled="!cards.length">抽牌</button>
-        <button class="ghost" @click="reset">重置</button>
-        <span class="counter">牌库：{{ cards.length }} 张</span>
-      </section>
-
-      <section class="history">
-        <h2>抽牌历史</h2>
-        <ul v-if="history.length" class="history-list">
-          <li v-for="(item, index) in history" :key="index">
-            <span class="history-name">{{ item.name }}</span>
-            <span class="history-time">{{ item.time }}</span>
-          </li>
+    <section class="info-grid">
+      <article class="info-card">
+        <h3>全牌阵组成</h3>
+        <p><span class="stat">📚 {{ deckSize }} 张</span>包含大阿尔克那与全部小阿尔克那。</p>
+        <p class="hint">抽牌时自动混合正位与逆位，点击牌背翻转查看。</p>
+        <ul class="suit-list">
+          <li>🔥 权杖：行动、灵感</li>
+          <li>💧 圣杯：情感、关系</li>
+          <li>⚔️ 宝剑：思维、决策</li>
+          <li>🪙 星币：物质、现实</li>
         </ul>
-        <p v-else class="empty">还没有抽牌记录。</p>
-      </section>
-    </template>
+      </article>
+      <article class="info-card">
+        <h3>推荐用法</h3>
+        <p>Past / Present / Future + God's Will 牌阵，帮助梳理时间线与神圣指引。</p>
+        <p>点击「开始洗牌与占卜」后系统会随机抽取四张牌，自动展示正逆位含义。</p>
+        <p class="hint">想快速了解抽到的牌，可查看下方「抽到的卡牌总览」。</p>
+      </article>
+    </section>
 
-    <template v-else>
-      <p class="loading">正在读取牌组……</p>
-    </template>
+    <div class="actions">
+      <button @click="startDivination">开始洗牌与占卜</button>
+      <button class="ghost" @click="reset" :disabled="!hasDrawn">重新洗牌</button>
+      <span class="counter">剩余牌堆：{{ remaining }} 张</span>
+    </div>
+
+    <section class="spread-container" v-show="hasDrawn">
+      <div class="spread-title">三线时空</div>
+      <div class="card-slot" v-for="(card, index) in drawn.slice(0, 3)" :key="card.name + index">
+        <div class="position-label">{{ positions[index] }}</div>
+        <div class="card" :class="{ flipped: card.flipped }" @click="toggleFlip(index)">
+          <div class="card-inner">
+            <div class="card-front"></div>
+            <div class="card-back" :class="{ 'is-reversed': card.isReversed }">
+              <span class="status-badge" :class="card.isReversed ? 'status-rev' : 'status-up'">{{ card.isReversed ? '【逆位】' : '【正位】' }}</span>
+              <div class="tarot-icon">{{ card.icon }}</div>
+              <div class="tarot-name">{{ card.name }}</div>
+              <hr>
+              <div class="tarot-meaning">{{ card.meaning }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="god-will-section" v-show="hasDrawn">
+      <div class="spread-title">来自神性的提醒</div>
+      <div class="card-slot" v-if="drawn[3]">
+        <div class="position-label god">God's Will (神的旨意)</div>
+        <div class="card" :class="{ flipped: drawn[3].flipped }" @click="toggleFlip(3)">
+          <div class="card-inner">
+            <div class="card-front"></div>
+            <div class="card-back" :class="{ 'is-reversed': drawn[3].isReversed }">
+              <span class="status-badge" :class="drawn[3].isReversed ? 'status-rev' : 'status-up'">{{ drawn[3].isReversed ? '【逆位】' : '【正位】' }}</span>
+              <div class="tarot-icon">{{ drawn[3].icon }}</div>
+              <div class="tarot-name">{{ drawn[3].name }}</div>
+              <hr>
+              <div class="tarot-meaning">{{ drawn[3].meaning }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="drawn-list" v-show="hasDrawn">
+      <h3>抽到的卡牌总览</h3>
+      <div v-if="drawn.length" class="summary-list">
+        <div class="drawn-item" v-for="(card, idx) in drawn" :key="card.name + idx">
+          <div>
+            <span class="badge" :class="card.type === 'minor' ? 'badge-minor' : 'badge-major'">{{ card.type === 'minor' ? '小阿尔克那' : '大阿尔克那' }}</span>
+            {{ card.name }}
+          </div>
+          <div>{{ card.suit ? `${card.icon} ${card.suit}` : '原型能量' }} · {{ card.isReversed ? '逆位' : '正位' }}</div>
+          <div>{{ card.meaning }}</div>
+        </div>
+      </div>
+      <p v-else class="empty">还没有抽牌记录。</p>
+    </section>
   </div>
 
   <script type="module">
     const { createApp } = Vue;
 
+    const majorArcana = [
+      { name: '0. 愚者', icon: '🎒', meaningUp: '新的开始、天真、自由、无限可能。放下恐惧，勇敢迈出第一步。', meaningRev: '鲁莽、冒险过度、不负责任、计划不周。请三思而后行。' },
+      { name: 'I. 魔术师', icon: '🪄', meaningUp: '创造力、技能、意志力、显化。你拥有实现目标的所有资源。', meaningRev: '欺骗、才华被埋没、计划受阻、意志薄弱。小心被误导。' },
+      { name: 'II. 女祭司', icon: '📜', meaningUp: '直觉、潜意识、神秘、内在智慧。静下心来聆听内心的声音。', meaningRev: '情绪不稳定、忽视直觉、表面肤浅、隐藏的秘密被揭露。' },
+      { name: 'III. 皇后', icon: '👑', meaningUp: '丰盛、母性、自然、感官享受。充满创造力和富足的时期。', meaningRev: '依赖、创造力受阻、家庭问题、过度挥霍或自我忽视。' },
+      { name: 'IV. 皇帝', icon: '🏰', meaningUp: '权威、结构、控制、父亲形象。建立秩序，运用逻辑解决问题。', meaningRev: '暴政、僵化、滥用职权、缺乏纪律。或是面对过于强势的控制。' },
+      { name: 'V. 教皇', icon: '⛪', meaningUp: '传统、信仰、顺从、精神指引。遵循规范或寻求长辈建议。', meaningRev: '反叛、挑战传统、由于束缚感到窒息、错误的建议。' },
+      { name: 'VI. 恋人', icon: '💞', meaningUp: '爱、和谐、关系、选择。重大抉择或美好的合作关系。', meaningRev: '不和谐、分离、错误的选择、诱惑、沟通不畅。' },
+      { name: 'VII. 战车', icon: '🛞', meaningUp: '胜利、意志力、决心、自我控制。坚持信念就能战胜困难。', meaningRev: '失控、失败、缺乏方向、受到挫折。你需要重新掌握方向盘。' },
+      { name: 'VIII. 力量', icon: '🦁', meaningUp: '勇气、耐心、同情心、以柔克刚。内在的力量胜过外在的暴力。', meaningRev: '自我怀疑、软弱、恐惧、失去控制。需要找回自信。' },
+      { name: 'IX. 隐士', icon: '🕯️', meaningUp: '反省、独处、寻求真理。从喧嚣中撤退，独自寻找答案。', meaningRev: '孤立、寂寞、拒绝帮助、过于封闭。小心不要与世隔绝。' },
+      { name: 'X. 命运之轮', icon: '🎡', meaningUp: '改变、好运、周期、转折点。顺应变化，命运正在转动。', meaningRev: '厄运、由于抗拒改变而受苦、不可控的坏事件。稍安勿躁。' },
+      { name: 'XI. 正义', icon: '⚖️', meaningUp: '公平、真理、因果、法律。诚实面对自己，种瓜得瓜。', meaningRev: '不公、偏见、逃避责任、法律纠纷。由于不诚实而导致的后果。' },
+      { name: 'XII. 倒吊人', icon: '🦇', meaningUp: '牺牲、新视角、等待、放手。换个角度看世界，暂时的停滞。', meaningRev: '无谓的牺牲、拖延、顽固、无法放手。你在做无用功。' },
+      { name: 'XIII. 死神', icon: '💀', meaningUp: '结束、转变、重生、放手。旧事物的终结是新开始的条件。', meaningRev: '抗拒改变、停滞不前、恐惧结束。越是抓住不放，越痛苦。' },
+      { name: 'XIV. 节制', icon: '🏺', meaningUp: '平衡、适度、耐心、疗愈。寻找中庸之道，保持心态平和。', meaningRev: '失衡、过度、缺乏耐心、冲突。你的生活失去了平衡。' },
+      { name: 'XV. 恶魔', icon: '😈', meaningUp: '束缚、物质主义、诱惑、执念。意识到被欲望控制才能解脱。', meaningRev: '摆脱束缚、觉醒、打破锁链。你正在重获自由。' },
+      { name: 'XVI. 高塔', icon: '⚡', meaningUp: '变、混乱、启示、崩塌。虚假基础的崩塌带来解放。', meaningRev: '勉强维持、害怕改变、延迟的灾难。逃避不可避免的事实。' },
+      { name: 'XVII. 星星', icon: '⭐', meaningUp: '希望、灵感、宁静、治愈。未来充满希望，保持信念。', meaningRev: '绝望、缺乏信心、感到失落。你的光芒暂时被乌云遮蔽。' },
+      { name: 'XVIII. 月亮', icon: '🌙', meaningUp: '幻觉、恐惧、潜意识、不安。事情不像表面那样，小心假象。', meaningRev: '混乱解除、秘密被揭穿、恐惧消散。迷雾正在慢慢散去。' },
+      { name: 'XIX. 太阳', icon: '☀️', meaningUp: '快乐、成功、活力、积极。享受当下的幸福和成就。', meaningRev: '暂时的挫折、悲观、成功被推迟。虽然有阴影，但太阳仍在。' },
+      { name: 'XX. 审判', icon: '🎺', meaningUp: '复活、觉醒、召唤。一个阶段的结束，回应内心的呼唤。', meaningRev: '自我怀疑、拒绝改变、忽视召唤。你在逃避成长的机会。' },
+      { name: 'XXI. 世界', icon: '🌍', meaningUp: '完成、整合、成就、完美句号。准备进入下一个层级。', meaningRev: '未完成、缺乏闭环、停滞。还需要最后一步才能圆满。' }
+    ];
+
+    const suitMeta = [
+      { name: '权杖', icon: '🔥', focus: '行动与灵感' },
+      { name: '圣杯', icon: '💧', focus: '情感与关系' },
+      { name: '宝剑', icon: '⚔️', focus: '思维与决策' },
+      { name: '星币', icon: '🪙', focus: '物质与现实' }
+    ];
+
+    const rankMeaning = {
+      '王牌': { up: '新的种子、纯粹潜能', rev: '起步迟缓、机会错过' },
+      '二': { up: '平衡、两难、初步协商', rev: '犹豫不决、迟迟不选' },
+      '三': { up: '扩张、合作、展望', rev: '计划停滞、合作受阻' },
+      '四': { up: '稳定、巩固、基础', rev: '停滞、固守、缺乏弹性' },
+      '五': { up: '冲突、挑战、学习', rev: '回避矛盾、内耗拉扯' },
+      '六': { up: '流动、分享、过渡', rev: '不平衡、失去支持' },
+      '七': { up: '坚持、洞察、评估', rev: '自我怀疑、策略失衡' },
+      '八': { up: '行动、投入、转向', rev: '停滞、犹豫、效率低' },
+      '九': { up: '成熟、守护、成果临近', rev: '疲惫、怀疑、防御过度' },
+      '十': { up: '完成、圆满、阶段收束', rev: '过载、脱节、难以收尾' },
+      '侍从': { up: '消息、学习、好奇', rev: '分心、消息延迟、兴趣转移' },
+      '骑士': { up: '行动、冒险、推进', rev: '冲动、失控、方向飘忽' },
+      '皇后': { up: '滋养、成熟、包容', rev: '过度情绪化、缺乏界限' },
+      '国王': { up: '掌控、领导、定调', rev: '固执、独断、能量封闭' }
+    };
+
+    function generateMinorArcana() {
+      const ranks = ['王牌', '二', '三', '四', '五', '六', '七', '八', '九', '十', '侍从', '骑士', '皇后', '国王'];
+      const deck = [];
+      suitMeta.forEach((suit) => {
+        ranks.forEach((rank) => {
+          const base = rankMeaning[rank];
+          deck.push({
+            name: `${suit.name}${rank}`,
+            icon: suit.icon,
+            type: 'minor',
+            suit: suit.name,
+            focus: suit.focus,
+            meaningUp: `${base.up}，围绕${suit.focus}展开。`,
+            meaningRev: `${base.rev}，需要重新审视${suit.focus}。`
+          });
+        });
+      });
+      return deck;
+    }
+
+    const fullDeck = [...majorArcana, ...generateMinorArcana()];
+
     createApp({
       data() {
         return {
-          cards: [],
-          current: null,
-          history: [],
-          ready: false,
-          error: null
+          deck: [...fullDeck],
+          drawn: [],
+          hasDrawn: false,
+          positions: ['Past (过去)', 'Present (现在)', 'Future (未来)']
         };
       },
-      methods: {
-        drawCard() {
-          if (!this.ready || !this.cards.length) return;
-          const index = Math.floor(Math.random() * this.cards.length);
-          const card = this.cards.splice(index, 1)[0];
-          this.current = card;
-          this.history.unshift({
-            name: card.name,
-            time: new Date().toLocaleString()
-          });
+      computed: {
+        deckSize() {
+          return fullDeck.length;
         },
-        reset() {
-          this.history = [];
-          this.current = null;
-          this.fetchCards();
-        },
-        async fetchCards() {
-          try {
-            this.ready = false;
-            this.error = null;
-            this.current = null;
-            const response = await fetch('cards.json');
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
-            }
-            const data = await response.json();
-            this.cards = [...data];
-            this.ready = true;
-          } catch (error) {
-            console.error('读取牌组失败', error);
-            this.error = '读取牌组失败，请检查网络或重试。';
-          }
+        remaining() {
+          return this.hasDrawn ? this.deck.length : this.deckSize;
         }
       },
-      mounted() {
-        this.fetchCards();
+      methods: {
+        shuffle(deck) {
+          for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+        },
+        startDivination() {
+          this.deck = [...fullDeck];
+          this.shuffle(this.deck);
+          const picks = this.deck.slice(0, 4).map((card) => {
+            const isReversed = Math.random() < 0.5;
+            return {
+              ...card,
+              isReversed,
+              flipped: false,
+              meaning: isReversed ? card.meaningRev : card.meaningUp
+            };
+          });
+          this.drawn = picks;
+          this.hasDrawn = true;
+        },
+        toggleFlip(index) {
+          this.drawn[index].flipped = !this.drawn[index].flipped;
+        },
+        reset() {
+          this.hasDrawn = false;
+          this.drawn = [];
+          this.deck = [...fullDeck];
+        }
       }
     }).mount('#app');
   </script>
