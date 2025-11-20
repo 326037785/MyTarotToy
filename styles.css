@@ -1,0 +1,151 @@
+:root {
+  --bg: #130c1f;
+  --panel: #1d132f;
+  --accent: #d49cf9;
+  --text: #f4edff;
+  --muted: #c5b9d9;
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 32px 16px 48px;
+  font-family: "Inter", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  background: radial-gradient(circle at 20% 20%, rgba(212, 156, 249, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(120, 201, 255, 0.07), transparent 40%),
+    var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  width: min(960px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.app-header {
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.card-display {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.card-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.card-element {
+  color: var(--muted);
+}
+
+.card-meaning {
+  margin: 14px 0 0;
+  line-height: 1.7;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+button {
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background: var(--accent);
+  color: #1a0f2b;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.ghost {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.counter {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.history {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.history h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-name {
+  font-weight: 600;
+}
+
+.history-time {
+  color: var(--muted);
+  margin-left: 8px;
+  font-size: 0.9rem;
+}
+
+.empty,
+.loading {
+  color: var(--muted);
+}

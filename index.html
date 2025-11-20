@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>灵感塔罗抽牌</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+  <div id="app">
+    <template v-if="ready">
+      <header class="app-header">
+        <h1>灵感塔罗抽牌</h1>
+        <p class="subtitle">抽一张牌，记录当下的讯息与心情。</p>
+      </header>
+
+      <section class="card-display" v-if="current">
+        <div class="card-meta">
+          <div class="card-name">{{ current.name }}</div>
+          <div class="card-element">对应元素：{{ current.element }}</div>
+        </div>
+        <p class="card-meaning">{{ current.meaningUp }}</p>
+      </section>
+
+      <section class="controls">
+        <button @click="drawCard" :disabled="!cards.length">抽牌</button>
+        <button class="ghost" @click="reset">重置</button>
+        <span class="counter">牌库：{{ cards.length }} 张</span>
+      </section>
+
+      <section class="history">
+        <h2>抽牌历史</h2>
+        <ul v-if="history.length" class="history-list">
+          <li v-for="(item, index) in history" :key="index">
+            <span class="history-name">{{ item.name }}</span>
+            <span class="history-time">{{ item.time }}</span>
+          </li>
+        </ul>
+        <p v-else class="empty">还没有抽牌记录。</p>
+      </section>
+    </template>
+
+    <template v-else>
+      <p class="loading">正在读取牌组……</p>
+    </template>
+  </div>
+
+  <script type="module">
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          cards: [],
+          current: null,
+          history: [],
+          ready: false
+        };
+      },
+      methods: {
+        drawCard() {
+          if (!this.cards.length) return;
+          const index = Math.floor(Math.random() * this.cards.length);
+          const card = this.cards.splice(index, 1)[0];
+          this.current = card;
+          this.history.unshift({
+            name: card.name,
+            time: new Date().toLocaleString()
+          });
+        },
+        reset() {
+          this.history = [];
+          this.current = null;
+          this.fetchCards();
+        },
+        async fetchCards() {
+          try {
+            this.ready = false;
+            const response = await fetch('cards.json');
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            this.cards = [...data];
+            this.ready = true;
+          } catch (error) {
+            console.error('读取牌组失败', error);
+          }
+        }
+      },
+      mounted() {
+        this.fetchCards();
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
